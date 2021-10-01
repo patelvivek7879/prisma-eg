@@ -6,7 +6,8 @@ const PORT = process.env.PORT || 3300
 const HOST = process.env.HOST
 
 const {
-    PrismaClient
+    PrismaClient,
+    Prisma
 } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -20,6 +21,8 @@ const {
     validationResult
 } = require('express-validator');
 
+
+//function to validation
 const validate = validations => {
     return async (req, res, next) => {
         for (let validation of validations) {
@@ -35,6 +38,14 @@ const validate = validations => {
     }
 }
 
+const commonResponse ={
+    success: true,
+    error: false,
+    msg: null,
+    statusCode: null
+}
+
+//get all employees on base route
 app.get("/", async (req, res) => {
     try {
         const result = await prisma.employee.findMany();
@@ -48,24 +59,30 @@ app.get("/", async (req, res) => {
     }
 });
 
+// add a employee
 app.post("/addEmployee",
-    // body('name').not().isEmpty().trim().escape(),
-    // body('email').isEmail().normalizeEmail(), async (req, res) => {
-    //     const errors = validationResult(req);
-    //     if (!errors.isEmpty()) {
-    //         return res.status(400).json({
-    //             errors: errors.array()
-    //         });
-    //     }
     validate([
         body('name').not().isEmpty().trim().escape(),
-        body('email').isEmail().normalizeEmail()
+        body('email').isEmail().normalizeEmail(),
+        body('deptId').not().isEmpty()
     ]), async (req, res) => {
         const {
             email,
-            name
+            name,
+            deptId
         } = req.body;
+
         try {
+            const isDeptExists = await prisma.department.findUnique({
+                where: {
+                    id: Number(deptId)
+                }
+            });
+            if (isDeptExists === null) {
+                res.status(400).json({
+                    "msg": "Department with given code is not exists."
+                });
+               }
             const isExists = await prisma.employee.findUnique({
                 where: {
                     email: String(email)
@@ -79,28 +96,46 @@ app.post("/addEmployee",
                     "error": true,
                     "msg": 'Employee with email is already exists.'
                 });
-            } else {
+            } else if (isDeptExists && !isExists) {
+                //try{
                 const result = await prisma.employee.create({
                     data: {
                         email: email,
-                        name: name
+                        name: name,
+                        deptId: deptId
                     }
                 });
-                console.log(result);
+
+                console.log("Result ", result);
+
                 if (result) {
                     res.json({
-                        'success': true,
-                        'error': false,
-                        'msg': `Employee successfully added`
+                        ...commonResponse,
+                        msg: `Employee successfully added`,
+                        statusCode: 200,
+                        statusMsg: 'Ok'
                     })
                 }
-
+            }
+            else {
+                // res.status(400).json({
+                //     "success": false,
+                //     "error": true,
+                //     "msg": "Some error"
+                // })
+                res.json({
+                    ...commonResponse,
+                    success: false,
+                    error: true,
+                    msg: "Server Error"
+                })
             }
         } catch (error) {
             console.log("Error : ", error);
         }
     });
 
+//update a employee details
 app.put("/updateEmployee", async (req, res) => {
     const {
         id,
@@ -117,19 +152,12 @@ app.put("/updateEmployee", async (req, res) => {
             }
         });
 
-        console.log(name + " , " + email);
-
         if (exists) {
-            console.log("name : ", name);
-            console.log({ ...exists });
             const data = {
                 ...exists,
                 name: name,
                 email: email
             };
-
-            console.log("Exist data : ", exists);
-            console.log("for Update: ", data);
 
             const result = await prisma.employee.update(
                 {
@@ -139,7 +167,6 @@ app.put("/updateEmployee", async (req, res) => {
                     data: data
                 }
             );
-            console.log("Data after updation : ", result);
             res.send(result);
         }
     } catch (error) {
@@ -147,6 +174,8 @@ app.put("/updateEmployee", async (req, res) => {
     }
 });
 
+
+//delete employee by id
 app.delete("/deleteEmployee/:id", async (req, res) => {
     const { id } = req.params;
 
@@ -175,8 +204,8 @@ app.delete("/deleteEmployee/:id", async (req, res) => {
     });
 });
 
+//get employee by id using params
 app.get("/employee/:id", async (req, res) => {
-
     const {
         id
     } = req.params;
@@ -193,6 +222,7 @@ app.get("/employee/:id", async (req, res) => {
     }
 });
 
+// get employee by full name 
 app.get("/getEmployeeByName", async (req, res) => {
     const { name } = req.query;
     console.log(name);
@@ -206,6 +236,7 @@ app.get("/getEmployeeByName", async (req, res) => {
     res.send(result);
 });
 
+// get employee by id  using query
 app.get("/getEmployeeById", async (req, res) => {
     const { id } = req.query;
     console.log(req.query);
@@ -219,18 +250,21 @@ app.get("/getEmployeeById", async (req, res) => {
     res.send(result);
 })
 
+// get all employees with /getEmployees route
 app.get("/getEmployees", async (req, res) => {
-    const result = await prisma.$queryRaw`SELECT * FROM "Employee"`;
+    const result = await prisma.$queryRaw`SELECT * FROM "employee"`;
     res.send(result);
 }
 );
 
-app.get("/search",async (req, res)=>{
+/* 
+*/
+app.get("/search", async (req, res) => {
     const { searchField } = req.body;
     const result = await prisma.employee.findMany({
-        where:{
-            OR:[{
-                name:{
+        where: {
+            OR: [{
+                name: {
                     startsWith: searchField
                 }
             }]
@@ -239,6 +273,27 @@ app.get("/search",async (req, res)=>{
     res.send(result);
 });
 
+app.post("/addDepartment", async (req, res) => {
+    const { name } = req.body;
+    try {
+        const result = await prisma.department.create({
+            data: {
+                name: name
+            }
+        });
+        res.send(result);
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+app.get('/departments', async (req, res) => {
+    const result = await prisma.department.findMany();
+    res.send(result);
+})
+
+/* handle request on port 3300
+ */
 app.listen(PORT, (err) => {
     if (err) {
         console.log(`Server Error : ${err}`);

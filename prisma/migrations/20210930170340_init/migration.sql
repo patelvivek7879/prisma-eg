@@ -5,7 +5,6 @@
 
 */
 -- DropTable
-DROP TABLE "Employee";
 
 -- CreateTable
 CREATE TABLE "employee" (
