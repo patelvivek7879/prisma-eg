@@ -1,51 +1,35 @@
-const express = require('express');
-const app = express();
-require('dotenv').config();
 
-const PORT = process.env.PORT || 3300
-const HOST = process.env.HOST
-
+const router = require("express").Router();
+const validate = require("./customValidation");
+const commonResponse = require("./commonResponse");
+const {
+    body,
+    validationResult
+} = require('express-validator');
 const {
     PrismaClient
 } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-app.use(express.json());
-app.use(express.urlencoded({
-    extended: false
-}));
-
-const {
-    body,
-    validationResult
-} = require('express-validator');
-
-
-//function for validation
-const validate = validations => {
-    return async (req, res, next) => {
-        for (let validation of validations) {
-            const result = await validation.run(req);
-            if (result.errors.length) break;
+async function isDepartmentExists(deptId) {
+    try {
+        const result = await prisma.department.findUnique({
+            where: {
+                id: Number(deptId)
+            }
+        });
+        if (result === null) {
+            return false;
         }
-
-        const errors = validationResult(req);
-        if (errors.isEmpty()) {
-            return next();
-        }
-        res.status(400).json({ errors: errors.array() });
+    } catch (error) {
+        console.log("Erorr from isDepartmentExists : ", error)
     }
+    return true;
 }
 
-const commonResponse = {
-    success: true,
-    error: false,
-    msg: null,
-    statusCode: null
-}
 
 //get all employees on base route
-app.get("/", async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const result = await prisma.employee.findMany();
         res.json(result);
@@ -59,7 +43,7 @@ app.get("/", async (req, res) => {
 });
 
 // add a employee
-app.post("/addEmployee",
+router.post("/addEmployee",
     validate([
         body('name').not().isEmpty().trim().escape(),
         body('email').isEmail().normalizeEmail(),
@@ -72,29 +56,23 @@ app.post("/addEmployee",
         } = req.body;
 
         try {
-            const isDeptExists = await prisma.department.findUnique({
-                where: {
-                    id: Number(deptId)
-                }
-            });
-            if (isDeptExists === null) {
-                res.status(400).json({
-                    "msg": "Department with given code is not exists."
-                });
-            }
-            const isExists = await prisma.employee.findUnique({
+            const isEmployeeExists = await prisma.employee.findUnique({
                 where: {
                     email: String(email)
                 },
             });
-
-            if (isExists) {
+            const deptExists = await isDepartmentExists(deptId);
+            if (!deptExists) {
+                res.status(400).json({
+                    "msg": "Department with given code is not exists."
+                });
+            } else if (isEmployeeExists) {
                 res.status(400).json({
                     "success": false,
                     "error": true,
                     "msg": 'Employee with email is already exists.'
                 });
-            } else if (isDeptExists && !isExists) {
+            } else if (!isEmployeeExists) {
                 const result = await prisma.employee.create({
                     data: {
                         email: email,
@@ -102,9 +80,6 @@ app.post("/addEmployee",
                         deptId: deptId
                     }
                 });
-
-
-
                 if (result) {
                     res.json({
                         ...commonResponse,
@@ -113,10 +88,7 @@ app.post("/addEmployee",
                         statusMsg: 'Ok'
                     })
                 }
-            }
-            else {
-
-
+            } else {
                 res.json({
                     ...commonResponse,
                     success: false,
@@ -130,45 +102,71 @@ app.post("/addEmployee",
     });
 
 //update a employee details
-app.put("/updateEmployee", async (req, res) => {
+router.put("/updateEmployee", async (req, res) => {
     const {
         id,
         name,
         email,
+        deptId
     } = req.body;
-
+    console.log(req.body);
     try {
         const exists = await prisma.employee.findUnique({
             where: {
                 id: Number(id)
             }
         });
-
+        if (exists === null) {
+            res.json({
+                success: false,
+                error: true,
+                msg: `Employee with id ${id} does not exists.`
+            })
+        }
         if (exists) {
             const data = {
                 ...exists,
                 name: name,
-                email: email
+                email: email,
+                deptId: deptId
             };
 
-            const result = await prisma.employee.update(
-                {
-                    where: {
-                        id: Number(id)
-                    },
-                    data: data
-                }
-            );
-            res.send(result);
+            const isDeptExists = await isDepartmentExists(deptId);
+            if (!isDeptExists) {
+                res.json({
+                    ...commonResponse,
+                    success: false,
+                    error: true,
+                    msg: 'Department id does not exists.',
+                    statusCode: 400
+                })
+            } else {
+                const result = await prisma.employee.update(
+                    {
+                        where: {
+                            id: Number(id)
+                        },
+                        data: data
+                    }
+                );
+                console.log(result);
+                res.send(result);
+            }
         }
     } catch (error) {
-
+        console.log(error);
+        res.json({
+            ...commonResponse,
+            success: false,
+            error: true,
+            msg: "Sever Error!!!"
+        })
     }
 });
 
 
 //delete employee by id
-app.delete("/deleteEmployee/:id", async (req, res) => {
+router.delete("/deleteEmployee/:id", async (req, res) => {
     const { id } = req.params;
 
     const exists = await prisma.employee.findUnique({
@@ -182,22 +180,21 @@ app.delete("/deleteEmployee/:id", async (req, res) => {
             error: true,
             msg: `Employee with id ${id} does not exists.`
         })
-    }
-
+    }else{
     const result = await prisma.employee.delete({
         where: {
             id: Number(id)
         }
     });
-
     res.status(200).json({
         success: true,
         error: false
     });
+    }
 });
 
 //get employee by id using params
-app.get("/employee/:id", async (req, res) => {
+router.get("/employee/:id", async (req, res) => {
     const {
         id
     } = req.params;
@@ -215,20 +212,23 @@ app.get("/employee/:id", async (req, res) => {
 });
 
 // get employee by full name 
-app.get("/getEmployeeByName", async (req, res) => {
+router.get("/getEmployeeByName", async (req, res) => {
     const { name } = req.query;
-
-    const result = await prisma.$queryRaw`SELECT name,email FROM "Employee" WHERE name = ${name}`;
+    try {
+        const result = await prisma.$queryRaw`SELECT name,email FROM "employee" WHERE name = ${name}`;
+        res.send(result);
+    } catch (error) {
+        console.log(error);
+    }
     // const result = await prisma.employee.findFirst({
     //     where:{
     //         name: String(name)
     //     }
     // });
-    res.send(result);
 });
 
 // get employee by id  using query
-app.get("/getEmployeeById", async (req, res) => {
+router.get("/getEmployeeById", async (req, res) => {
     const { id } = req.query;
     //const result = await prisma.$queryRaw`SELECT name,email FROM "Employee" WHERE id = ${id}`;
     const result = await prisma.employee.findUnique({
@@ -240,7 +240,7 @@ app.get("/getEmployeeById", async (req, res) => {
 })
 
 // get all employees with /getEmployees route
-app.get("/getEmployees", async (req, res) => {
+router.get("/getEmployees", async (req, res) => {
     const result = await prisma.$queryRaw`SELECT * FROM "employee"`;
     res.send(result);
 }
@@ -249,7 +249,7 @@ app.get("/getEmployees", async (req, res) => {
 /* 
 serach with a give specific value
 */
-app.get("/search", async (req, res) => {
+router.get("/search", async (req, res) => {
     const { searchField } = req.body;
     const result = await prisma.employee.findMany({
         where: {
@@ -263,33 +263,4 @@ app.get("/search", async (req, res) => {
     res.send(result);
 });
 
-
-//add a department
-app.post("/addDepartment", async (req, res) => {
-    const { name } = req.body;
-    try {
-        const result = await prisma.department.create({
-            data: {
-                name: name
-            }
-        });
-        res.send(result);
-    } catch (error) {
-        console.log(error);
-    }
-});
-
-//get all departments
-app.get('/departments', async (req, res) => {
-    const result = await prisma.department.findMany();
-    res.send(result);
-})
-
-/* handle request on port 3300
- */
-app.listen(PORT, (err) => {
-    if (err) {
-        console.log(`Server Error : ${err}`);
-    }
-    console.log(`Server is running on port ${PORT}`);
-});
+module.exports = router;
