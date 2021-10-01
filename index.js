@@ -102,15 +102,45 @@ app.put("/updateEmployee", async (req, res) => {
                     id: Number(id)
                 },
                 data:{
-                    published: !exists.published
+                    name: String(name),
+                    email: String(email)
+                    //published: !exists.published
                 }
             }
         );
+        console.log(result);
         res.send(result);   
      }
     }catch(error){
          
     }
+});
+
+app.delete("/deleteEmployee/:id", async (req, res)=>{
+    const { id } = req.params;
+
+    const exists = await prisma.employee.findUnique({
+        where: {
+            id: Number(id)
+        }
+    })
+    if(!exists){
+        res.send({
+            success: false,
+            error: true,
+            msg: `Employee with id ${id} does not exists.`
+        })
+    }
+
+    const result = await prisma.employee.delete({
+        where:{
+            id: Number(id)
+        }
+    });
+    console.log(result);
+    res.status(200).json({success: true,
+    error: false
+    });
 });
 
 app.get("/employee/:id", async (req, res) => {
