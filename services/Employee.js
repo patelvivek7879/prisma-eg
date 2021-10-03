@@ -11,27 +11,11 @@ const {
 } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-async function isDepartmentExists(deptId) {
-    try {
-        const result = await prisma.department.findUnique({
-            where: {
-                id: Number(deptId)
-            }
-        });
-        if (result === null) {
-            return false;
-        }
-    } catch (error) {
-        console.log("Erorr from isDepartmentExists : ", error)
-    }
-    return true;
-}
-
-
 //get all employees on base route
 router.get("/", async (req, res) => {
     try {
         const result = await prisma.employee.findMany();
+        console.log(result);
         res.json(result);
     } catch (err) {
         res.json({
@@ -52,7 +36,8 @@ router.post("/addEmployee",
         const {
             email,
             name,
-            deptId
+            deptId, 
+            age
         } = req.body;
 
         try {
@@ -77,7 +62,8 @@ router.post("/addEmployee",
                     data: {
                         email: email,
                         name: name,
-                        deptId: deptId
+                        deptId: deptId,
+                        age: age
                     }
                 });
                 if (result) {
@@ -101,13 +87,30 @@ router.post("/addEmployee",
         }
     });
 
+    async function isDepartmentExists(deptId) {
+        try {
+            const result = await prisma.department.findUnique({
+                where: {
+                    id: Number(deptId)
+                }
+            });
+            if (result === null) {
+                return false;
+            }
+        } catch (error) {
+            console.log("Erorr from isDepartmentExists : ", error)
+        }
+        return true;
+    }
+
 //update a employee details
 router.put("/updateEmployee", async (req, res) => {
     const {
         id,
         name,
         email,
-        deptId
+        deptId,
+        age
     } = req.body;
     console.log(req.body);
     try {
@@ -128,7 +131,8 @@ router.put("/updateEmployee", async (req, res) => {
                 ...exists,
                 name: name,
                 email: email,
-                deptId: deptId
+                deptId: deptId,
+                age: age
             };
 
             const isDeptExists = await isDepartmentExists(deptId);

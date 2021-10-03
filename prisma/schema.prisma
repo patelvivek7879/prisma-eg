@@ -4,16 +4,18 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model employee {
   id         Int        @id @default(autoincrement())
   email      String     @unique
   name       String?
-  department department @relation(fields: [deptId], references: [id])
   deptId     Int
+  age        Int?
+  department department @relation(fields: [deptId], references: [id])
 }
 
 model department {
