@@ -1,9 +1,16 @@
 import React from 'react';
+import {Table} from 'antd';
 
-const DepartmentListComponent = () =>{
+const { Column } = Table;
+
+const DepartmentListComponent = ({departments}) =>{
     return(
       <>
-        <h1>Hello World</h1>
+         <Table dataSource={departments} style={{ marginTop: 20 }}>
+                        <Column title="S.No." dataIndex="index" key="index" render={(text, record, index, key) => index + 1} />
+                        <Column title="Name" dataIndex="name" key="name" />
+                        <Column title="Department ID" dataIndex="id" key="id" />
+            </Table>
       </>
     )
   }
