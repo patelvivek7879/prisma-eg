@@ -1,8 +1,7 @@
 import './App.css';
 import React from 'react';
 import axios from 'axios';
-import { Table, Input, Spin, Button, Tabs } from 'antd';
-import { BrowserRouter as Router, Link, Switch, Route } from 'react-router-dom';
+import { Tabs } from 'antd';
 
 import DepartmentListComponent from './components/DepartmentList';
 import EmployeeListComponent from './components/EmployeeList';
@@ -37,7 +36,7 @@ const getEmployees = () => {
 }
 
 const getDepartments = () =>{
-  return axios.get("api/department/departments")
+  return axios.get("/api/department/departments")
   .then((response)=>{
     return response.data;
   });
