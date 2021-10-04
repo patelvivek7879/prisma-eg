@@ -78,16 +78,21 @@ const App = () => {
     return employee.name.toLowerCase().includes(searchValue.toLowerCase());
   });
 
+  const filteredDepartments = departments.filter((department)=>{
+    if(searchValue === "None") return true;
+    return department.name.toLowerCase().includes(searchValue.toLowerCase());
+  })
+
   return (
   <><div  style={{marginTop: 20, marginLeft: 20 }}>
-      <SearchBox onSearch={applyFilter}/>
+      <SearchBox onSearch={applyFilter} />
       Filter Applied : {searchValue}
     <Tabs defaultActiveKey="1">
     <TabPane tab="Employee" key="employees">
         <EmployeeListComponent employees={filteredEmployees} loading={loading} departments={departments} />
     </TabPane>
     <TabPane tab="Department" key="departments">
-              <DepartmentListComponent departments={departments} />
+              <DepartmentListComponent departments={filteredDepartments} />
     </TabPane>
     </Tabs>
     </div>
