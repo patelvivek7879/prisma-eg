@@ -47,7 +47,7 @@ const EmployeeListComponent = ({employees, loading}) => {
                         <Column title="S.No." dataIndex="index" key="index" align="center" render={(text, record, index, key) => (page - 1) * 10 + (index + 1)} />
                         <Column title="Name" dataIndex="name" key="name" />
                         <Column title="Email" dataIndex="email" key="email" />
-                        <Column title="Age" dataIndex="age" key="index" align="center"/>
+                        <Column title="Age" dataIndex="age" key="age" align="center"/>
                         <Column title="Edit" dataIndex="edit" key="edit" align="center" render={(text,record) => <Button onClick={()=>{employeeUpdateHandler(record)}} icon={<EditOutlined/>}>Edit</Button>} />
                         <Column title="Delete" dataIndex="delete" key="delete" align="center" render={(text, record, index) => <Button onClick={()=>employeeDeleteHandler(record)} icon={<DeleteOutlined/>}>Delete</Button>} />
                     </Table>
