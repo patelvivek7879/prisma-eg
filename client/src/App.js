@@ -45,7 +45,7 @@ const getDepartments = () =>{
 const App = () => {
   const [employees, setEmployees] = React.useState([]);
   const [departments, setDepartments] = React.useState([]);
-  const [searchWhat, setSearchCriteria] = React.useState("None");
+  const [searchValue, setSearchValue] = React.useState("None");
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -67,24 +67,24 @@ const App = () => {
 
   const applyFilter = (ev) => {
     if (ev.currentTarget.value.length < 3) {
-      setSearchCriteria("None");
+      setSearchValue("None");
       return;
     }
-    setSearchCriteria(ev.currentTarget.value);
+    setSearchValue(ev.currentTarget.value);
   }
 
   const filteredEmployees = employees.filter((employee) => {
-    if (searchWhat === "None") return true;
-    return employee.name.toLowerCase().includes(searchWhat.toLowerCase());
+    if (searchValue === "None") return true;
+    return employee.name.toLowerCase().includes(searchValue.toLowerCase());
   });
 
   return (
   <><div  style={{marginTop: 20, marginLeft: 20 }}>
       <SearchBox onSearch={applyFilter}/>
-      Filter Applied : {searchWhat}
+      Filter Applied : {searchValue}
     <Tabs defaultActiveKey="1">
     <TabPane tab="Employee" key="employees">
-        <EmployeeListComponent employees={filteredEmployees} loading={loading} />
+        <EmployeeListComponent employees={filteredEmployees} loading={loading} departments={departments} />
     </TabPane>
     <TabPane tab="Department" key="departments">
               <DepartmentListComponent departments={departments} />
