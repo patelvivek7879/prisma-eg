@@ -107,7 +107,7 @@ const EmployeeListComponent = ({employees, departments, loading}) => {
                     <Table dataSource={employees} style={{ marginTop: 20 }}  pagination={{ onChange(current) { setPage(current) } }}>
                         <Column title="S.No." dataIndex="index" key="index" align="center" render={(text, record, index, key) => (page - 1) * 10 + (index + 1)} />
                         <Column title="Name" dataIndex="name" key="name"  sorter={sortByNameToggler}/>
-                        <Column title="Email" dataIndex="email" key="email" sorter={(a,b)=> a.email.localeCompare(b.email)}/>
+                        <Column title="Email" dataIndex="email" key="email" sorter={(a,b)=> a.email.localeCompare(b.email)}  />
                         <Column title="Age" dataIndex="age" key="age" align="center"/>
                         <Column title="Edit" dataIndex="edit" key="edit" align="center" render={(text,record) => <Button onClick={()=>{employeeUpdateHandler(record)}} icon={<EditOutlined/>}>Edit</Button>} />
                         <Column title="Delete" dataIndex="delete" key="delete" align="center" render={(text, record, index) => <Button onClick={()=>employeeDeleteHandler(record)} icon={<DeleteOutlined/>}>Delete</Button>} />
