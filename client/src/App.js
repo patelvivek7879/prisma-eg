@@ -87,6 +87,7 @@ const App = () => {
   return (
   <>
   <Title>TMDC</Title>
+  <h1>The Modern Data</h1>
   <div  style={{marginTop: 20, marginLeft: 20 }}>
       <SearchBox onSearch={applyFilter} />
       Filter Applied : {searchValue}
