@@ -85,7 +85,9 @@ const App = () => {
   })
 
   return (
-  <><div  style={{marginTop: 20, marginLeft: 20 }}>
+  <>
+  <Title>TMDC</Title>
+  <div  style={{marginTop: 20, marginLeft: 20 }}>
       <SearchBox onSearch={applyFilter} />
       Filter Applied : {searchValue}
     <Tabs defaultActiveKey="1">
