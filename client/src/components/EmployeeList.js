@@ -1,4 +1,4 @@
-import { Table, Button, Spin, Modal, Menu, Dropdown, Input, Form, InputNumber } from 'antd';
+import { Table, Button, Spin, Modal, Menu, Dropdown, Input, Form, InputNumber, notification } from 'antd';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { EditOutlined, DeleteOutlined, ExclamationCircleOutlined, DownOutlined } from '@ant-design/icons';
@@ -50,9 +50,22 @@ const EmployeeListComponent = ({ employees, departments, loading }) => {
     }
 
     const deleteEmployee = (empId) =>{
-        axios.delete(`/api/employee/deleteEmployee/${empId}`)
-       .then(response => console.log(response))
-       .catch(error => console.log(error))
+    axios.delete(`/api/employee/deleteEmployee/${empId}`)
+       .then(response => {
+        console.log(response);
+        notification.success({
+        message: 'Employee deleted successfully!',
+    })}
+    )
+       .catch(error => {
+            console.log(error);
+            notification.error(
+                {
+                    message: "Some error occured!",
+                }
+            )
+       }
+        );
     }
 
     const employeeDeleteHandler = (employee) => {
@@ -121,12 +134,27 @@ const EmployeeListComponent = ({ employees, departments, loading }) => {
             headers: headers
         })
 //        axios.post("/api/employee/addEmployee", employee, headers)
-        .then(response => console.log(response))
-        .catch((response)=>{
-            console.log(response);
+        .then(response => 
+            {
+                console.log(response);
+                notification.success({
+                    message: "Employee added successfully."
+                });
+            })
+        .catch((error)=>{
+            console.log(error);
+            notification.error({
+                message: 'Can not perform operation!'
+            });
         });
         setIsEmployeeAdd(false);
     }
+
+    const formLayout = {
+        labelCol: { span: 8 },
+        wrapperCol: { span: 16 },
+      };
+
     return (
         <React.Fragment >
             {
@@ -135,9 +163,9 @@ const EmployeeListComponent = ({ employees, departments, loading }) => {
                     <React.Fragment>
                         <div>
                              <Button type="primary" onClick={addEmployee}>+ Add </Button>
-                        <span style={{float: 'right'}}>
+                        <span style={{float: 'right', marginRight: 10}}>
                         <b>Filter By Department : </b>
-                        <Dropdown overlay={departmentsMenu} >
+                        <Dropdown overlay={departmentsMenu}>
                             <Button>
                                 {departmentFilter === "" ? "Select Department" : departmentFilter}<DownOutlined />
                             </Button>
@@ -158,7 +186,7 @@ const EmployeeListComponent = ({ employees, departments, loading }) => {
                         onOk={form.submit}
                         onCancel={addEmployeeCancle}
                         >
-                            <Form form={form} onFinish={addEmployeeOk}>
+                            <Form {...formLayout} form={form} onFinish={addEmployeeOk} >
                                 <Form.Item 
                                 label="Full Name"
                                 name="name"
