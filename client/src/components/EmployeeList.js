@@ -136,15 +136,28 @@ const EmployeeListComponent = ({ employees, departments, loading }) => {
 //        axios.post("/api/employee/addEmployee", employee, headers)
         .then(response => 
             {
-                console.log(response);
+                console.log(typeof response);
+                console.log(response.data);
+                if(!response.data.error){
                 notification.success({
-                    message: "Employee added successfully."
+                    message: `${response.data.msg}`
                 });
+            }
+            if(!response.data.success){
+                notification.error({
+                    message: `${response.data.msg}`
+                });
+            }
+            if(response.data.error){
+                notification.error({
+                    message: `${response.data.msg}`
+                })
+            }
             })
         .catch((error)=>{
             console.log(error);
             notification.error({
-                message: 'Can not perform operation!'
+                message: "Server Error!!!"
             });
         });
         setIsEmployeeAdd(false);
