@@ -1,7 +1,7 @@
 import './App.css';
 import React from 'react';
 import axios from 'axios';
-import { Tabs } from 'antd';
+import { Tabs, Typography } from 'antd';
 
 import DepartmentListComponent from './components/DepartmentList';
 import EmployeeListComponent from './components/EmployeeList';
@@ -27,6 +27,7 @@ import { employeeReducer } from "./reducers/index";
 export const store = createStore(employeeReducer, applyMiddleware(logger));
 
 const {TabPane} = Tabs;
+const {Title} = Typography;
 
 const getEmployees = () => {
   return axios.get("/api/employee")

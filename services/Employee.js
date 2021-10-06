@@ -15,7 +15,6 @@ const prisma = new PrismaClient();
 router.get("/", async (req, res) => {
     try {
         const result = await prisma.employee.findMany();
-        console.log(result);
         res.json(result);
     } catch (err) {
         res.json({
