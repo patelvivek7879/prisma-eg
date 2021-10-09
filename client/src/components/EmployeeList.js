@@ -155,10 +155,16 @@ const EmployeeListComponent = ({ employees, departments, loading }) => {
             }
             })
         .catch((error)=>{
-            console.log(error);
-            notification.error({
-                message: "Server Error!!!"
-            });
+            if(error.response.data.msg)
+            {
+                notification.warning({
+                    message: `${error.response.data.msg}`
+                });    
+            }else{
+                notification.error({
+                    message: "Server ERRRR!"
+                })
+            }
         });
         setIsEmployeeAdd(false);
     }
@@ -167,6 +173,10 @@ const EmployeeListComponent = ({ employees, departments, loading }) => {
         labelCol: { span: 8 },
         wrapperCol: { span: 16 },
       };
+
+      const employeeNameHandler = (e) =>{
+        console.log(e.currentTargety);
+      }
 
     return (
         <React.Fragment >
@@ -193,17 +203,18 @@ const EmployeeListComponent = ({ employees, departments, loading }) => {
                             <Column title="Edit" dataIndex="edit" key="edit" align="center" render={(text, record) => <Button onClick={() => { employeeUpdateHandler(record) }} icon={<EditOutlined />}>Edit</Button>} />
                             <Column title="Delete" dataIndex="delete" key="delete" align="center" render={(text, record, index) => <Button onClick={() => employeeDeleteHandler(record)} icon={<DeleteOutlined />}>Delete</Button>} />
                         </Table>
-                        <Modal 
+                        <Modal
                         title="Add Employee" 
                         visible={isEmployeeAdd}
                         onOk={form.submit}
                         onCancel={addEmployeeCancle}
                         >
                             <Form {...formLayout} form={form} onFinish={addEmployeeOk} >
-                                <Form.Item 
+                                <Form.Item
                                 label="Full Name"
                                 name="name"
                                 rules={[{require: true, message: "Please enter full name"}]}
+                                onChange={employeeNameHandler}
                                 >
                                     <Input />
                                 </Form.Item>

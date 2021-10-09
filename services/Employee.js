@@ -191,7 +191,8 @@ router.delete("/deleteEmployee/:id", async (req, res) => {
     });
     res.status(200).json({
         success: true,
-        error: false
+        error: false,
+        msg: 'Employee deleted successfully.'
     });
     }
 });
